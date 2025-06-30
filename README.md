@@ -18,8 +18,9 @@ A Django-based backend system for a Smart Car assistant. It integrates multiple 
 - 🧠 **PyTorch CNN** for road condition and traffic sign classification
 - 💤 **Drowsiness Detection** using TimeDistributed CNN + LSTM
 - 🎤 **Voice Command Processing** using NLP (Speech-to-Text / Text-to-Speech)
-- 🗺️ Integration with Google Maps API
 - 🎵 Smart car assistant with music and alarm APIs
+- ⚙️ Custom data-to-response pipeline that processes AI model outputs and formats them for API responses
+
 
 ---
 
@@ -28,7 +29,7 @@ A Django-based backend system for a Smart Car assistant. It integrates multiple 
 ```
 smart_car_backend/
 │
-├── api/                      # REST API endpoints
+│
 ├── drive_class/              # Vehicle classification module
 ├── drowsiness_detection/     # Drowsiness detection logic
 ├── front_camera_detection/   # Object detection & depth estimation
@@ -42,7 +43,7 @@ smart_car_backend/
 ├── db.sqlite3                # SQLite database
 ├── LICENSE                   # License file
 ├── manage.py                 # Django management script
-├── README                    # Project documentation (this file)
+├── README                    # Project documentation 
 ├── requirements              # Dependencies list
 ├── wake_word_status          # Wake word tracking file
 ```
@@ -85,13 +86,51 @@ Make sure to download the following models and place them in the correct `models
 
 ## 📦 Sample API Endpoints
 
-| Endpoint             | Description                    |
-|----------------------|--------------------------------|
-| `/detect_vehicle/`   | Returns detected vehicles      |
-| `/estimate_depth/`   | Returns depth map              |
-| `/classify_signs/`   | Returns detected traffic signs |
-| `/detect_drowsiness/`| Detects drowsy state           |
-| `/nlp/`              | Handles smart voice commands   |
+Vehicle Detection, Signs, Road Status, and Video Processing
+
+| Endpoint             | Description                                |
+| -------------------- | ------------------------------------------ |
+| `/close_vehicles/`   | Returns vehicles detected close to the car |
+| `/detected_signals/` | Returns detected traffic signs             |
+| `/road_status/`      | Provides current road condition            |
+| `/start_processing/` | Starts video processing pipeline           |
+
+Drowsiness Detection
+
+| Endpoint                  | Description                         |
+| ------------------------- | ----------------------------------- |
+| `/drowsiness/api/detect/` | Returns current drowsiness status   |
+| `/drowsiness/api/start/`  | Starts drowsiness detection process |
+
+Driving Pattern Prediction
+
+| Endpoint                    | Description                           |
+| --------------------------- | ------------------------------------- |
+| `/predict-driving-pattern/` | Predicts the driving behavior pattern |
+
+Smart Assistant 
+
+| Endpoint                           | Description                          |
+| ---------------------------------- | ------------------------------------ |
+| `/assistant/api/start-wake-word/`  | Starts wake word listening           |
+| `/assistant/api/get-intent/`       | Retrieves intent from voice commands |
+| `/assistant/api/wake-word-status/` | Returns wake word listening status   |
+
+---
+
+⚙️ Data-to-Response Pipeline
+The backend processes raw outputs from multiple AI models through a custom pipeline that:
+
+Parses and filters model outputs
+
+Integrates data from different models (e.g., vehicle detection + depth estimation)
+
+Formats and structures the data as clean JSON responses
+
+Supports real-time response for the smart car assistant APIs
+
+This pipeline ensures consistency, reliability, and speed in the backend responses.
+
 
 ---
 
@@ -105,4 +144,4 @@ GitHub: [@hussein98912](https://github.com/hussein98912)
 
 ## 📜 License
 
-MIT License — free to use and modify
+MIT License 
