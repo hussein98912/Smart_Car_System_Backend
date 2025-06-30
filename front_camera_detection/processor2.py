@@ -1,0 +1,154 @@
+import cv2
+import torch
+import numpy as np
+from ultralytics import YOLO
+from torchvision import transforms
+from PIL import Image
+import sys
+import os
+
+# ✅ تحديد الجهاز
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ✅ تحميل النماذج
+signal_model = YOLO(r"front_camera_detection/models/best.pt")
+vehicle_model = YOLO(r"front_camera_detection/models/best (1).pt")
+
+# ✅ تحميل نموذج MiDaS لتقدير العمق
+sys.path.append("midas")
+from midas.dpt_depth import DPTDepthModel
+midas = DPTDepthModel("dpt_hybrid_384.pt", backbone="vitb_rn50_384", non_negative=True).to(device).eval()
+
+# ✅ تحميل نموذج كشف حالة الطريق
+road_damage_model_path = r"C:\Users\slman\Desktop\smart_car_backend\front_camera_detection\models\resnet_model.pt"
+road_damage_model = torch.load(road_damage_model_path, map_location=device)
+road_damage_model.eval()
+
+# ✅ التحويلات المطلوبة
+midas_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225]),
+])
+
+road_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+])
+
+# ✅ المتغيرات العامة
+close_vehicles = []
+detected_signals = []
+road_status_list = []
+detection_history = []
+
+# ✅ دالة المعالجة
+def process_video(video_path):
+    global close_vehicles, detected_signals, road_status_list, detection_history
+    close_vehicles.clear()
+    detected_signals.clear()
+    road_status_list.clear()
+    detection_history.clear()
+
+    cap = cv2.VideoCapture(video_path)
+    frame_num = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_num += 1
+        output_frame = frame.copy()
+        frame_detections = []
+
+        if frame_num % 4 == 0:
+            img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img_resized = cv2.resize(img_rgb, (384, 384))
+            input_tensor = midas_transform(img_resized).unsqueeze(0).to(device)
+
+            with torch.no_grad():
+                prediction = midas(input_tensor)
+                prediction = torch.nn.functional.interpolate(
+                    prediction.unsqueeze(1),
+                    size=(img_rgb.shape[0], img_rgb.shape[1]),
+                    mode="bicubic",
+                    align_corners=False
+                ).squeeze().cpu().numpy()
+
+            depth_map = (prediction - prediction.min()) / (prediction.max() - prediction.min() + 1e-6)
+
+            # ✅ كشف المركبات + حساب المسافة
+            vehicle_results = vehicle_model(img_rgb)[0]
+            for box, cls, score in zip(vehicle_results.boxes.xyxy, vehicle_results.boxes.cls, vehicle_results.boxes.conf):
+                x1, y1, x2, y2 = map(int, box.cpu().numpy())
+                x1, y1 = max(0, x1), max(0, y1)
+                x2, y2 = min(frame.shape[1] - 1, x2), min(frame.shape[0] - 1, y2)
+                if x2 <= x1 or y2 <= y1:
+                    continue
+
+                cropped_depth = depth_map[y1:y2, x1:x2]
+                if cropped_depth.size == 0:
+                    continue
+
+                median_depth = np.median(cropped_depth)
+                median_depth = max(median_depth, 1e-6)
+                scale_factor = 1.4
+                estimated_distance = 1 / median_depth * scale_factor
+                estimated_distance = np.clip(estimated_distance, 0.3, 20)
+
+                label = vehicle_model.names[int(cls)]
+                detection_data = {
+                    "class": label,
+                    "distance": estimated_distance,
+                    "confidence": float(score.cpu().numpy()),
+                    "bbox": [x1, y1, x2, y2],
+                    "timestamp": cv2.getTickCount() / cv2.getTickFrequency()
+                }
+                frame_detections.append(detection_data)
+
+                text = f"{label}: {estimated_distance:.2f} m"
+                cv2.rectangle(output_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(output_frame, text, (x1, y1 - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+                if estimated_distance < 5.0:
+                    close_vehicles.append({
+                        "frame": frame_num,
+                        "vehicle_type": label,
+                        "distance_m": estimated_distance
+                    })
+ 
+            # ✅ كشف إشارات المرور
+            signal_results = signal_model(frame)[0]
+            for box, cls in zip(signal_results.boxes.xyxy, signal_results.boxes.cls):
+                x1, y1, x2, y2 = map(int, box.cpu().numpy())
+                label = signal_model.names[int(cls)]
+                detected_signals.append({
+                    "frame": frame_num,
+                    "signal_type": label,
+                    "bbox": [x1, y1, x2, y2]
+                })
+
+            # ✅ كشف حالة الطريق
+            road_img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            road_img_tensor = road_transform(Image.fromarray(road_img)).unsqueeze(0).to(device)
+            with torch.no_grad():
+                road_pred = road_damage_model(road_img_tensor)
+                road_label = torch.argmax(road_pred, dim=1).item()
+
+            road_status_list.append({
+                "frame": frame_num,
+                "road_status": road_label
+            })
+
+            # ✅ سجل الكشوفات
+            detection_history.append({
+                "frame": frame_num,
+                "detections": frame_detections
+            })
+            if len(detection_history) > 100:
+                detection_history.pop(0)
+
+    cap.release()
+    return detection_history

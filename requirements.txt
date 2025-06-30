@@ -1,0 +1,9 @@
+torch
+torchvision
+opencv-python
+ultralytics
+tqdm
+numpy
+Pillow
+requests
+tensorflow
