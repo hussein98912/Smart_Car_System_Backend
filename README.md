@@ -73,14 +73,22 @@ python manage.py runserver
 
 Make sure to download the following models and place them in the correct `models/` or related folders:
 
-| Model Type               | File Name                     |
-|--------------------------|-------------------------------|
-| Vehicle Detection (YOLO) | `best(1).pt`                  |
-| Depth Estimation (MiDaS) | `dpt_large_384.pt`            |
-| Sign/Road Classifier     | `resnet_model.pt`             |
-| Drowsiness Detection     | `drowsiness_cnn_lstm.h5`      |
+| Model Type               | File Name                |
+|--------------------------|--------------------------|
+| Vehicle Detection (YOLO) | `best(1).pt`             |
+| Depth Estimation (MiDaS) | `dpt_large_384.pt`       |
+| Sign/Road Classifier     | `resnet_model.pt`        |
+| Drowsiness Detection     | `drowsiness_cnn_lstm.h5` |
 
-> 🔗 You can host model files using Google Drive, Hugging Face, or similar platforms and add the links here.
+---
+
+**Notes:**  
+- The **Depth Estimation model (`dpt_large_384.pt`)** can be downloaded from the official MiDaS repository here:  
+  [https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large_384.pt](https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large_384.pt)  
+- The **Vehicle Detection (YOLO)** and **Drowsiness Detection** models are maintained in separate repositories:  
+  - Vehicle Detection Model Repository: [https://github.com/hussein98912/Vehicle-Detection-Model](https://github.com/hussein98912/Vehicle-Detection-Model)  
+  - Drowsiness Detection Model Repository: [https://github.com/hussein98912/Drowsiness-Detection-Model](https://github.com/hussein98912/Drowsiness-Detection-Model)  
+- The **Sign/Road Classifier (`resnet_model.pt`)** is included within this project.
 
 ---
 
