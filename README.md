@@ -12,7 +12,7 @@ A Django-based backend system for a Smart Car assistant. It integrates multiple 
 
 ## 🛠 Features
 
-- 🔍 **YOLOv8** for vehicle detection
+- 🔍 **YOLOv11** for vehicle detection
 - 📏 **MiDaS** for depth estimation
 - 🧠 **PyTorch CNN** for road condition and traffic sign classification
 - 💤 **Drowsiness Detection** using TimeDistributed CNN + LSTM
