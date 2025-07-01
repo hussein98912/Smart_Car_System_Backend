@@ -7,7 +7,6 @@ A Django-based backend system for a Smart Car assistant. It integrates multiple 
 - Traffic sign and road damage recognition
 - Driver drowsiness detection
 - Smart assistant NLP interface
-- Integration with Google Maps and music/alarm systems
 
 ---
 
@@ -86,8 +85,8 @@ Make sure to download the following models and place them in the correct `models
 - The **Depth Estimation model (`dpt_large_384.pt`)** can be downloaded from the official MiDaS repository here:  
   [https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large_384.pt](https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large_384.pt)  
 - The **Vehicle Detection (YOLO)** and **Drowsiness Detection** models are maintained in separate repositories:  
-  - Vehicle Detection Model Repository: [https://github.com/hussein98912/Vehicle-Detection-Model](https://github.com/hussein98912/Vehicle-Detection-Model)  
-  - Drowsiness Detection Model Repository: [https://github.com/hussein98912/Drowsiness-Detection-Model](https://github.com/hussein98912/Drowsiness-Detection-Model)  
+  - Vehicle Detection Model Repository: [https://github.com/hussein98912/Vehicle-Detection-classification-Model](https://github.com/hussein98912/vehicle_detection_classification_yolo)  
+  - Drowsiness Detection Model Repository: [https://github.com/hussein98912/Driver-Drowsiness-Detection-Model]((https://github.com/hussein98912/Driver_Drowsiness_Detection))  
 - The **Sign/Road Classifier (`resnet_model.pt`)** is included within this project.
 
 ---
